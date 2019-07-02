@@ -1,3 +1,4 @@
+require("dotenv").config()
 // MySQL and Inquirer packages:
 var mysql = require("mysql");
 var inquirer = require("inquirer");
@@ -5,16 +6,16 @@ var inquirer = require("inquirer");
 // Establishing connection with database.
 var connection = mysql.createConnection({
     host: "localhost",
-    port: 3306,
+    port: 8889,
     user: "root",
-    password: "",
-    database: "bamazon_db"
+    password: "root",
+    database: "Bamazon"
 });
 connection.connect(function (err) {
+    console.log("do we get here?")
     if (err) throw err;
-    // console.log("connected as id " + connection.threadId);
+    console.log("connected as id " + connection.threadId);
     displayItems();
-
 });
 
 // Function to display the product items in the terminal window.
@@ -31,8 +32,8 @@ function displayItems() {
         }
         console.log("====================================================");
     });
-
-} askBuyer();
+    askBuyer();
+} 
 
 // Function to ask the user if they want to purchase an item.
 function askBuyer() {
@@ -63,11 +64,12 @@ function askBuyer() {
         ]).then(function (response) {
             var itemID = response.id;
             var itemQuantity = response.quantity;
-            connection.query("SELECT * FROM products WHERE ?", [{
+            connection.query("SELECT * FROM products WHERE item_id = ?", [{
                 item_id: itemID
             }],
                 function (err, chosenItem) {
                     if (err) throw err;
+                    console.log(chosenItem[0])
                     if (chosenItem[0].stock_quantity - itemQuantity >= 0) {
                         var total = itemQuantity * chosenItem[0].price;
                         console.log("Your total purchase is $" + total + ".");
