@@ -12,7 +12,6 @@ var connection = mysql.createConnection({
     database: "Bamazon"
 });
 connection.connect(function (err) {
-    console.log("do we get here?")
     if (err) throw err;
     console.log("connected as id " + connection.threadId);
     displayItems();
@@ -31,8 +30,9 @@ function displayItems() {
                 res[i].item_id + " | " + res[i].product_name + " | " + res[i].department_name + " | " + res[i].price + " | " + res[i].stock_quantity);
         }
         console.log("====================================================");
+        askBuyer();
+
     });
-    askBuyer();
 } 
 
 // Function to ask the user if they want to purchase an item.
@@ -61,30 +61,41 @@ function askBuyer() {
                     return false;
                 }
             }
-        ]).then(function (response) {
-            var itemID = response.id;
-            var itemQuantity = response.quantity;
-            connection.query("SELECT * FROM products WHERE item_id = ?", [{
-                item_id: itemID
-            }],
-                function (err, chosenItem) {
-                    if (err) throw err;
-                    console.log(chosenItem[0])
-                    if (chosenItem[0].stock_quantity - itemQuantity >= 0) {
-                        var total = itemQuantity * chosenItem[0].price;
-                        console.log("Your total purchase is $" + total + ".");
-                        connection.query("UPDATE products SET stock_quantity=? WHERE item_id=?", [chosenItem[0].stock_quantity - itemQuantity, itemID],
-                            function (err) {
-                                if (err) throw err;
-                                startOver();
-                            })
-                    } else {
-                        console.log("Order NOT completed.  We currently have" + chosenItem[0].stock_quanity + "of " + chosenItem[0].product_name + " in stock.");
-                        startOver();
+        ]).then(function (val) {
+            var itemID = val.id;
+            var itemQuantity = val.quantity;
+            console.log(itemID, itemQuantity)
+            connection.query(
+                "UPDATE products SET = stock_quantity - ? WHERE item_id = ?", 
+                [itemQuantity - itemID],
+                function(err, res) {
+                    displayItems();
+                }
 
-                    }
+            )
+            // connection.query("SELECT * FROM products WHERE item_id = ?", [{
+            //     item_id: itemID
+            // }],
+            //     function (err, chosenItem) {
+            //         if (err) throw err;
+            //         console.log(chosenItem[0])
+            //         if (chosenItem[0].stock_quantity - itemQuantity >= 0) {
+            //             var total = itemQuantity * chosenItem[0].price;
+            //             console.log("Your total purchase is $" + total + ".");
+            //             connection.query(
+            //                 "UPDATE products SET = stock_quantity - ? WHERE item_id = ?", 
+            //                 [itemQuantity - itemID],
+            //                 function (err) {
+            //                     if (err) throw err;
+            //                     startOver();
+            //                 })
+            //         } else {
+            //             console.log("Order NOT completed.  We currently have" + chosenItem[0].stock_quanity + "of " + chosenItem[0].product_name + " in stock.");
+            //             startOver();
 
-                })
+            //         }
+
+            //     })
 
         })
 
